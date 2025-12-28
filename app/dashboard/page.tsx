@@ -19,9 +19,15 @@ import {
 } from "lucide-react";
 import { SankeyDiagram } from "@/components/sankey-diagram";
 import { MetricCard } from "@/components/metric-card";
-import { PlaceholderCard } from "@/components/placeholder-card";
+import { mockTransactions, getIncomeExpenseSummary, mockAccounts } from "@/lib/mock-data";
+import { NetWorthTrendChart } from "@/components/net-worth-trend-chart";
+import { SpendingBreakdownChart } from "@/components/spending-breakdown-chart";
+import { MonthlyComparisonChart } from "@/components/monthly-comparison-chart";
 
 export default function DashboardPage() {
+  const summary = getIncomeExpenseSummary(mockTransactions);
+  const totalBudget = 7500;
+  const budgetUsed = (summary.totalExpenses / totalBudget) * 100;
   return (
     <div className="min-h-screen bg-background">
       {/* Top Navigation */}
@@ -63,7 +69,7 @@ export default function DashboardPage() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto w-full">
+        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-400 mx-auto w-full">
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">Dashboard</h1>
@@ -74,29 +80,29 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <MetricCard
               title="Total Income"
-              value="$8,450"
+              value={`$${summary.totalIncome.toLocaleString()}`}
               change="+12.5%"
               trend="up"
               icon={<TrendingUp className="h-4 w-4" />}
             />
             <MetricCard
               title="Total Expenses"
-              value="$6,230"
+              value={`$${summary.totalExpenses.toLocaleString()}`}
               change="+8.2%"
               trend="up"
               icon={<Wallet className="h-4 w-4" />}
             />
             <MetricCard
               title="Net Savings"
-              value="$2,220"
+              value={`$${summary.netSavings.toLocaleString()}`}
               change="+24.3%"
               trend="up"
               icon={<TrendingUp className="h-4 w-4" />}
             />
             <MetricCard
               title="Monthly Budget"
-              value="$7,500"
-              change="83% used"
+              value={`$${totalBudget.toLocaleString()}`}
+              change={`${budgetUsed.toFixed(0)}% used`}
               trend="neutral"
               icon={<PieChart className="h-4 w-4" />}
             />
@@ -112,7 +118,7 @@ export default function DashboardPage() {
                 </p>
               </div>
               <Select defaultValue="current-month">
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-50">
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
                 <SelectContent>
@@ -126,36 +132,71 @@ export default function DashboardPage() {
             <SankeyDiagram />
           </Card>
 
-          {/* Additional Feature Placeholders */}
+          {/* Additional Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <PlaceholderCard
-              title="Net Worth Trend"
-              description="Track your net worth over time"
-              icon={<TrendingUp className="h-6 w-6" />}
-            />
-            <PlaceholderCard
-              title="Spending Breakdown"
-              description="See how you spend across categories"
-              icon={<PieChart className="h-6 w-6" />}
-            />
+            <Card className="p-6 bg-card/30 backdrop-blur-sm border-border/40">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold mb-1">Net Worth Trend</h3>
+                <p className="text-sm text-muted-foreground">Your net worth over the past year</p>
+              </div>
+              <NetWorthTrendChart />
+            </Card>
+
+            <Card className="p-6 bg-card/30 backdrop-blur-sm border-border/40">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold mb-1">Spending Breakdown</h3>
+                <p className="text-sm text-muted-foreground">
+                  Expenses by category this month
+                </p>
+              </div>
+              <SpendingBreakdownChart />
+            </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <PlaceholderCard
-              title="Monthly Comparison"
-              description="Compare spending month over month"
-              icon={<TrendingUp className="h-6 w-6" />}
-            />
-            <PlaceholderCard
-              title="Account Summary"
-              description="All your accounts at a glance"
-              icon={<Wallet className="h-6 w-6" />}
-            />
-            <PlaceholderCard
-              title="Budget Progress"
-              description="How you're tracking against budgets"
-              icon={<PieChart className="h-6 w-6" />}
-            />
+            <Card className="p-6 bg-card/30 backdrop-blur-sm border-border/40 lg:col-span-2">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold mb-1">Monthly Comparison</h3>
+                <p className="text-sm text-muted-foreground">
+                  Income vs expenses over recent months
+                </p>
+              </div>
+              <MonthlyComparisonChart />
+            </Card>
+
+            <Card className="p-6 bg-card/30 backdrop-blur-sm border-border/40">
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold mb-1">Account Summary</h3>
+                <p className="text-sm text-muted-foreground">All your accounts</p>
+              </div>
+              <div className="space-y-4">
+                {mockAccounts.map((account) => (
+                  <div
+                    key={account.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-linear-to-br from-primary/5 to-accent/5 border border-border/20"
+                  >
+                    <div>
+                      <p className="font-semibold text-sm">{account.name}</p>
+                      <p className="text-xs text-muted-foreground">{account.institution}</p>
+                    </div>
+                    <p className={`font-bold text-sm ${account.balance >= 0 ? "text-primary" : "text-chart-5"}`}>
+                      ${Math.abs(account.balance).toLocaleString()}
+                    </p>
+                  </div>
+                ))}
+                <div className="pt-4 border-t border-border/40">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold">Total Net Worth</p>
+                    <p className="text-lg font-bold text-primary">
+                      $
+                      {mockAccounts
+                        .reduce((sum, acc) => sum + acc.balance, 0)
+                        .toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
         </main>
       </div>

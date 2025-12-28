@@ -2,95 +2,179 @@
 
 import React from "react";
 import { ResponsiveContainer, Sankey, Tooltip } from "recharts";
+import {
+  mockTransactions,
+  calculateCategoryTotals,
+  calculateGroupTotals,
+} from "@/lib/mock-data";
 
-// Mock data for Sankey diagram
-// Format: { source: number, target: number, value: number }
-// Nodes: 0-2: Income sources, 3-6: Expense groups, 7-12: Categories
-const mockData = {
-  nodes: [
-    // Income sources (0-2)
-    { name: "Salary" },
-    { name: "Freelance" },
-    { name: "Investments" },
+// Generate Sankey data from transactions
+function generateSankeyData() {
+  const incomeTransactions = mockTransactions.filter((t) => t.type === "income");
+  const expenseTransactions = mockTransactions.filter((t) => t.type === "expense");
 
-    // Expense groups (3-7)
-    { name: "Housing" },
-    { name: "Transportation" },
-    { name: "Food & Dining" },
-    { name: "Entertainment" },
-    { name: "Savings" },
+  const categoryTotals = calculateCategoryTotals(expenseTransactions);
+  const groupTotals = calculateGroupTotals(expenseTransactions);
 
-    // Specific categories (8-15)
-    { name: "Rent" },
-    { name: "Utilities" },
-    { name: "Gas & Auto" },
-    { name: "Groceries" },
-    { name: "Restaurants" },
-    { name: "Streaming" },
-    { name: "Emergency Fund" },
-    { name: "Retirement" },
-  ],
-  links: [
-    // Salary flows
-    { source: 0, target: 3, value: 2800 }, // Salary -> Housing
-    { source: 0, target: 4, value: 800 },  // Salary -> Transportation
-    { source: 0, target: 5, value: 1200 }, // Salary -> Food
-    { source: 0, target: 6, value: 400 },  // Salary -> Entertainment
-    { source: 0, target: 7, value: 1250 }, // Salary -> Savings
+  // Build nodes array
+  const nodes: { name: string }[] = [];
+  const nodeIndexMap: Record<string, number> = {};
 
-    // Freelance flows
-    { source: 1, target: 3, value: 500 },  // Freelance -> Housing
-    { source: 1, target: 5, value: 300 },  // Freelance -> Food
-    { source: 1, target: 7, value: 700 },  // Freelance -> Savings
+  // Add income sources
+  const incomeSources = [...new Set(incomeTransactions.map((t) => t.category))];
+  incomeSources.forEach((source) => {
+    nodeIndexMap[source] = nodes.length;
+    nodes.push({ name: source });
+  });
 
-    // Investment flows
-    { source: 2, target: 7, value: 800 },  // Investments -> Savings
-    { source: 2, target: 6, value: 150 },  // Investments -> Entertainment
+  // Add expense groups
+  const expenseGroups = [...new Set(expenseTransactions.map((t) => t.categoryGroup))];
+  expenseGroups.forEach((group) => {
+    nodeIndexMap[group] = nodes.length;
+    nodes.push({ name: group });
+  });
 
-    // Housing breakdown
-    { source: 3, target: 8, value: 2500 },  // Housing -> Rent
-    { source: 3, target: 9, value: 800 },   // Housing -> Utilities
+  // Add top expense categories (top 10 by amount)
+  const topCategories = Object.entries(categoryTotals)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10)
+    .map(([cat]) => cat);
 
-    // Transportation breakdown
-    { source: 4, target: 10, value: 800 },  // Transportation -> Gas & Auto
+  topCategories.forEach((category) => {
+    nodeIndexMap[category] = nodes.length;
+    nodes.push({ name: category });
+  });
 
-    // Food breakdown
-    { source: 5, target: 11, value: 900 },  // Food -> Groceries
-    { source: 5, target: 12, value: 600 },  // Food -> Restaurants
+  // Build links array
+  const links: { source: number; target: number; value: number }[] = [];
 
-    // Entertainment breakdown
-    { source: 6, target: 13, value: 550 },  // Entertainment -> Streaming
+  // Income -> Expense Groups (distribute proportionally)
+  const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0);
+  const totalExpenses = expenseTransactions.reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-    // Savings breakdown
-    { source: 7, target: 14, value: 1250 }, // Savings -> Emergency Fund
-    { source: 7, target: 15, value: 1500 }, // Savings -> Retirement
-  ],
-};
+  incomeSources.forEach((source) => {
+    const sourceIncome = incomeTransactions
+      .filter((t) => t.category === source)
+      .reduce((sum, t) => sum + t.amount, 0);
 
-const COLORS = [
-  "var(--chart-1)", // Teal
-  "var(--chart-2)", // Cyan
-  "var(--chart-3)", // Blue
-  "var(--chart-4)", // Purple
-  "var(--chart-5)", // Pink
+    expenseGroups.forEach((group) => {
+      const groupTotal = groupTotals[group] || 0;
+      const proportionalAmount = (sourceIncome / totalIncome) * groupTotal;
+
+      if (proportionalAmount > 0) {
+        links.push({
+          source: nodeIndexMap[source],
+          target: nodeIndexMap[group],
+          value: Math.round(proportionalAmount),
+        });
+      }
+    });
+  });
+
+  // Expense Groups -> Top Categories
+  topCategories.forEach((category) => {
+    const transaction = expenseTransactions.find((t) => t.category === category);
+    if (transaction) {
+      const group = transaction.categoryGroup;
+      const categoryTotal = categoryTotals[category];
+
+      links.push({
+        source: nodeIndexMap[group],
+        target: nodeIndexMap[category],
+        value: Math.round(categoryTotal),
+      });
+    }
+  });
+
+  return { nodes, links };
+}
+
+const sankeyData = generateSankeyData();
+
+// Vibrant gradient colors for each link
+const LINK_COLORS = [
+  "#14b8a6", // Teal
+  "#06b6d4", // Cyan
+  "#3b82f6", // Blue
+  "#8b5cf6", // Purple
+  "#ec4899", // Pink
+  "#f59e0b", // Amber
+  "#10b981", // Emerald
+  "#6366f1", // Indigo
+];
+
+// Node colors with gradients
+const NODE_COLORS = [
+  "#0d9488", // Darker teal for income nodes
+  "#0891b2", // Darker cyan
+  "#2563eb", // Darker blue
+  "#7c3aed", // Darker purple
+  "#db2777", // Darker pink
 ];
 
 export function SankeyDiagram() {
   return (
-    <div className="w-full h-[500px]">
+    <div className="w-full h-125">
       <ResponsiveContainer width="100%" height="100%">
         <Sankey
-          data={mockData}
-          node={{
-            fill: COLORS[0],
-            stroke: "none",
+          data={sankeyData}
+          node={(props: any) => {
+            const { x, y, width, height, index, payload } = props;
+            const colorIndex = index % NODE_COLORS.length;
+
+            return (
+              <g>
+                <rect
+                  x={x}
+                  y={y}
+                  width={width}
+                  height={height}
+                  fill={NODE_COLORS[colorIndex]}
+                  rx={4}
+                />
+                <text
+                  x={x + width + 6}
+                  y={y + height / 2}
+                  textAnchor="start"
+                  fill="currentColor"
+                  fontSize={14}
+                  fontWeight={500}
+                  dominantBaseline="middle"
+                >
+                  {payload.name}
+                </text>
+              </g>
+            );
           }}
-          link={{
-            stroke: COLORS[2],
-            strokeOpacity: 0.2,
+          link={(props: any) => {
+            const { sourceX, sourceY, targetX, targetY, sourceControlX, targetControlX, linkWidth, index } = props;
+            const colorIndex = index % LINK_COLORS.length;
+
+            return (
+              <g>
+                <defs>
+                  <linearGradient id={`gradient-${index}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={LINK_COLORS[colorIndex]} stopOpacity={0.6} />
+                    <stop offset="100%" stopColor={LINK_COLORS[(colorIndex + 1) % LINK_COLORS.length]} stopOpacity={0.6} />
+                  </linearGradient>
+                </defs>
+                <path
+                  d={`
+                    M${sourceX},${sourceY}
+                    C${sourceControlX},${sourceY} ${targetControlX},${targetY} ${targetX},${targetY}
+                  `}
+                  fill="none"
+                  stroke={`url(#gradient-${index})`}
+                  strokeWidth={linkWidth}
+                  strokeOpacity={0.8}
+                  style={{ transition: "all 0.3s ease" }}
+                  className="hover:stroke-opacity-100"
+                />
+              </g>
+            );
           }}
-          nodePadding={50}
-          margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+          nodePadding={30}
+          margin={{ top: 20, right: 150, bottom: 20, left: 20 }}
         >
           <Tooltip
             content={({ payload }) => {
@@ -103,7 +187,7 @@ export function SankeyDiagram() {
                 return (
                   <div className="bg-card/95 backdrop-blur-sm border border-border/40 rounded-lg p-3 shadow-lg">
                     <p className="font-semibold text-sm mb-1">
-                      {mockData.nodes[data.source].name} → {mockData.nodes[data.target].name}
+                      {sankeyData.nodes[data.source].name} → {sankeyData.nodes[data.target].name}
                     </p>
                     <p className="text-primary font-bold">${data.value.toLocaleString()}</p>
                   </div>
