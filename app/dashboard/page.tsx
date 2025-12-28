@@ -26,12 +26,11 @@ import { MonthlyComparisonChart } from "@/components/monthly-comparison-chart";
 
 export default function DashboardPage() {
   const summary = getIncomeExpenseSummary(mockTransactions);
-  const totalBudget = 7500;
-  const budgetUsed = (summary.totalExpenses / totalBudget) * 100;
+  const savingsRate = ((summary.netSavings / summary.totalIncome) * 100).toFixed(1);
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen" style={{ backgroundColor: '#151F42' }}>
       {/* Top Navigation */}
-      <nav className="border-b border-border/40 backdrop-blur-sm sticky top-0 z-50 bg-background/95">
+      <nav className="border-b border-border/40 sticky top-0 z-50" style={{ backgroundColor: '#232A57' }}>
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
@@ -43,11 +42,11 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="relative">
-              <Search className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="relative hover:bg-white/10">
+              <Search className="h-4 w-4 text-gray-300" />
             </Button>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="relative hover:bg-white/10">
+              <Bell className="h-4 w-4 text-gray-300" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-chart-5 rounded-full" />
             </Button>
             <ThemeToggle />
@@ -58,13 +57,10 @@ export default function DashboardPage() {
 
       <div className="flex">
         {/* Sidebar */}
-        <aside className="hidden lg:block w-64 border-r border-border/40 min-h-[calc(100vh-57px)] bg-card/20">
+        <aside className="hidden lg:block w-64 border-r border-border/40 min-h-[calc(100vh-57px)]" style={{ backgroundColor: '#232A57' }}>
           <div className="p-4 space-y-2">
             <NavItem icon={<LayoutDashboard className="h-5 w-5" />} label="Dashboard" active />
-            <NavItem icon={<TrendingUp className="h-5 w-5" />} label="Analytics" />
-            <NavItem icon={<Wallet className="h-5 w-5" />} label="Accounts" />
-            <NavItem icon={<PieChart className="h-5 w-5" />} label="Budget" />
-            <NavItem icon={<Settings className="h-5 w-5" />} label="Settings" />
+            <NavItem icon={<TrendingUp className="h-5 w-5" />} label="Cash Flow" />
           </div>
         </aside>
 
@@ -100,32 +96,32 @@ export default function DashboardPage() {
               icon={<TrendingUp className="h-4 w-4" />}
             />
             <MetricCard
-              title="Monthly Budget"
-              value={`$${totalBudget.toLocaleString()}`}
-              change={`${budgetUsed.toFixed(0)}% used`}
-              trend="neutral"
-              icon={<PieChart className="h-4 w-4" />}
+              title="Savings Rate"
+              value={`${savingsRate}%`}
+              change="+5.2%"
+              trend="up"
+              icon={<TrendingUp className="h-4 w-4" />}
             />
           </div>
 
           {/* Cash Flow Sankey Section */}
-          <Card className="p-6 mb-6 bg-card/30 backdrop-blur-sm border-border/40">
+          <Card className="p-6 mb-6 border-border/40" style={{ backgroundColor: '#323F76' }}>
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
               <div>
-                <h2 className="text-2xl font-bold mb-1">Cash Flow</h2>
-                <p className="text-sm text-muted-foreground">
+                <h2 className="text-2xl font-bold mb-1 text-white">Cash Flow</h2>
+                <p className="text-sm text-gray-400">
                   Income sources flowing through expense categories
                 </p>
               </div>
               <Select defaultValue="current-month">
-                <SelectTrigger className="w-50">
+                <SelectTrigger className="w-50 bg-[#232A57] border-gray-600 text-white">
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="current-month">Current Month</SelectItem>
-                  <SelectItem value="last-month">Last Month</SelectItem>
-                  <SelectItem value="last-30-days">Last 30 Days</SelectItem>
-                  <SelectItem value="custom">Custom Range</SelectItem>
+                <SelectContent className="bg-[#232A57] border-gray-600">
+                  <SelectItem value="current-month" className="text-white hover:bg-[#323F76]">Current Month</SelectItem>
+                  <SelectItem value="last-month" className="text-white hover:bg-[#323F76]">Last Month</SelectItem>
+                  <SelectItem value="last-30-days" className="text-white hover:bg-[#323F76]">Last 30 Days</SelectItem>
+                  <SelectItem value="custom" className="text-white hover:bg-[#323F76]">Custom Range</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -134,18 +130,18 @@ export default function DashboardPage() {
 
           {/* Additional Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <Card className="p-6 bg-card/30 backdrop-blur-sm border-border/40">
+            <Card className="p-6 border-border/40" style={{ backgroundColor: '#323F76' }}>
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-1">Net Worth Trend</h3>
-                <p className="text-sm text-muted-foreground">Your net worth over the past year</p>
+                <h3 className="text-lg font-semibold mb-1 text-white">Net Worth Trend</h3>
+                <p className="text-sm text-gray-400">Your net worth over the past year</p>
               </div>
               <NetWorthTrendChart />
             </Card>
 
-            <Card className="p-6 bg-card/30 backdrop-blur-sm border-border/40">
+            <Card className="p-6 border-border/40" style={{ backgroundColor: '#323F76' }}>
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-1">Spending Breakdown</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-lg font-semibold mb-1 text-white">Spending Breakdown</h3>
+                <p className="text-sm text-gray-400">
                   Expenses by category this month
                 </p>
               </div>
@@ -154,20 +150,20 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card className="p-6 bg-card/30 backdrop-blur-sm border-border/40 lg:col-span-2">
+            <Card className="p-6 border-border/40 lg:col-span-2" style={{ backgroundColor: '#323F76' }}>
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-1">Monthly Comparison</h3>
-                <p className="text-sm text-muted-foreground">
+                <h3 className="text-lg font-semibold mb-1 text-white">Monthly Comparison</h3>
+                <p className="text-sm text-gray-400">
                   Income vs expenses over recent months
                 </p>
               </div>
               <MonthlyComparisonChart />
             </Card>
 
-            <Card className="p-6 bg-card/30 backdrop-blur-sm border-border/40">
+            <Card className="p-6 border-border/40" style={{ backgroundColor: '#323F76' }}>
               <div className="mb-4">
-                <h3 className="text-lg font-semibold mb-1">Account Summary</h3>
-                <p className="text-sm text-muted-foreground">All your accounts</p>
+                <h3 className="text-lg font-semibold mb-1 text-white">Account Summary</h3>
+                <p className="text-sm text-gray-400">All your accounts</p>
               </div>
               <div className="space-y-4">
                 {mockAccounts.map((account) => (

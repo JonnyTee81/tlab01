@@ -19,17 +19,26 @@ import {
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, Tooltip, Legend, SankeyController, Flow);
 
-// Vibrant colors for flows
-const FLOW_COLORS = [
-  { from: "#14b8a6", to: "#06b6d4" }, // Teal to Cyan
-  { from: "#06b6d4", to: "#3b82f6" }, // Cyan to Blue
-  { from: "#3b82f6", to: "#8b5cf6" }, // Blue to Purple
-  { from: "#8b5cf6", to: "#ec4899" }, // Purple to Pink
-  { from: "#ec4899", to: "#f59e0b" }, // Pink to Amber
-  { from: "#f59e0b", to: "#10b981" }, // Amber to Emerald
-  { from: "#10b981", to: "#6366f1" }, // Emerald to Indigo
-  { from: "#6366f1", to: "#14b8a6" }, // Indigo to Teal
+// Clean color scheme for better readability
+// Each unique node gets its own distinct color
+const NODE_COLORS: Record<string, string> = {};
+const DISTINCT_COLORS = [
+  "#14b8a6", // Teal
+  "#3b82f6", // Blue
+  "#8b5cf6", // Purple
+  "#ec4899", // Pink
+  "#f59e0b", // Amber
+  "#10b981", // Emerald
+  "#06b6d4", // Cyan
+  "#6366f1", // Indigo
 ];
+
+function getNodeColor(nodeName: string, index: number): string {
+  if (!NODE_COLORS[nodeName]) {
+    NODE_COLORS[nodeName] = DISTINCT_COLORS[index % DISTINCT_COLORS.length];
+  }
+  return NODE_COLORS[nodeName];
+}
 
 // Generate Sankey data from transactions
 function generateChartJsSankeyData() {
@@ -48,9 +57,14 @@ function generateChartJsSankeyData() {
 
   const totalIncome = incomeTransactions.reduce((sum, t) => sum + t.amount, 0);
 
+  // Assign colors to all nodes first
+  let nodeIndex = 0;
+  incomeSources.forEach(source => getNodeColor(source, nodeIndex++));
+  expenseGroups.forEach(group => getNodeColor(group, nodeIndex++));
+  topCategories.forEach(category => getNodeColor(category, nodeIndex++));
+
   // Build data array for Chart.js Sankey
   const data: any[] = [];
-  let colorIndex = 0;
 
   // Income -> Expense Groups
   incomeSources.forEach((source) => {
@@ -63,15 +77,14 @@ function generateChartJsSankeyData() {
       const proportionalAmount = (sourceIncome / totalIncome) * groupTotal;
 
       if (proportionalAmount > 10) {
-        // Only show flows > $10
-        const colors = FLOW_COLORS[colorIndex % FLOW_COLORS.length];
+        // Use source node color for the flow
+        const color = getNodeColor(source, 0);
         data.push({
           from: source,
           to: group,
           flow: Math.round(proportionalAmount),
-          color: colors,
+          color: color,
         });
-        colorIndex++;
       }
     });
   });
@@ -82,15 +95,15 @@ function generateChartJsSankeyData() {
     if (transaction) {
       const group = transaction.categoryGroup;
       const categoryTotal = categoryTotals[category];
-      const colors = FLOW_COLORS[colorIndex % FLOW_COLORS.length];
+      // Use group node color for the flow
+      const color = getNodeColor(group, 0);
 
       data.push({
         from: group,
         to: category,
         flow: Math.round(categoryTotal),
-        color: colors,
+        color: color,
       });
-      colorIndex++;
     }
   });
 
@@ -106,13 +119,22 @@ export function SankeyDiagram() {
       {
         label: "Cash Flow",
         data: sankeyData,
-        colorFrom: (c: any) => c.raw.color.from,
-        colorTo: (c: any) => c.raw.color.to,
+        colorFrom: (c: any) => c.raw.color,
+        colorTo: (c: any) => c.raw.color,
         colorMode: "gradient" as const,
         size: "max" as const,
         borderWidth: 0,
-        nodeWidth: 20,
+        nodeWidth: 30,
         padding: 16,
+        opacity: 0.6,
+        labels: {
+          font: {
+            size: 14,
+            family: "'Inter', sans-serif",
+            weight: 'bold' as const,
+          },
+          color: '#ffffff',
+        },
       },
     ],
   };
@@ -120,17 +142,32 @@ export function SankeyDiagram() {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        top: 10,
+        bottom: 10,
+        left: 10,
+        right: 10,
+      },
+    },
     plugins: {
       legend: {
         display: false,
       },
       tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        padding: 12,
+        backgroundColor: "rgba(0, 0, 0, 0.9)",
+        padding: 14,
         titleColor: "#ffffff",
         bodyColor: "#ffffff",
-        borderColor: "rgba(255, 255, 255, 0.1)",
+        borderColor: "rgba(255, 255, 255, 0.2)",
         borderWidth: 1,
+        titleFont: {
+          size: 14,
+          weight: 'bold' as const,
+        },
+        bodyFont: {
+          size: 13,
+        },
         callbacks: {
           title: (context: any) => {
             const dataPoint = context[0].raw;
@@ -143,6 +180,8 @@ export function SankeyDiagram() {
         },
       },
     },
+    // Force white color for node labels
+    color: '#ffffff',
   };
 
   return (

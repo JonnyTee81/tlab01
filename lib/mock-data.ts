@@ -23,7 +23,8 @@ export interface Account {
 export interface Category {
   name: string;
   group: string;
-  type: "income" | "expense";
+  type: "income" | "expense" | "transfer";
+  hideFromReport?: boolean;
   budget?: number;
 }
 
