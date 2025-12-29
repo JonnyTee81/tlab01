@@ -27,6 +27,13 @@ import { MonthlyComparisonChart } from "@/components/monthly-comparison-chart";
 export default function DashboardPage() {
   const summary = getIncomeExpenseSummary(mockTransactions);
   const savingsRate = ((summary.netSavings / summary.totalIncome) * 100).toFixed(1);
+
+  // Generate sparkline data for last 12 months (mock data)
+  const incomeSparkline = [14800, 15200, 16800, 15900, 17200, 16500, 16200, 17500, 17800, 18000, 17900, 18185];
+  const expenseSparkline = [8900, 9200, 9800, 9500, 10200, 9800, 9600, 10100, 10300, 10500, 10200, 10060];
+  const savingsSparkline = [5900, 6000, 7000, 6400, 7000, 6700, 6600, 7400, 7500, 7500, 7700, 8125];
+  const savingsRateSparkline = [39.9, 39.5, 41.7, 40.3, 40.7, 40.6, 40.7, 42.3, 42.1, 41.7, 43.0, 44.7];
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#151F42' }}>
       {/* Top Navigation */}
@@ -80,6 +87,7 @@ export default function DashboardPage() {
               change="+12.5%"
               trend="up"
               icon={<TrendingUp className="h-4 w-4" />}
+              sparklineData={incomeSparkline}
             />
             <MetricCard
               title="Total Expenses"
@@ -87,6 +95,7 @@ export default function DashboardPage() {
               change="+8.2%"
               trend="up"
               icon={<Wallet className="h-4 w-4" />}
+              sparklineData={expenseSparkline}
             />
             <MetricCard
               title="Net Savings"
@@ -94,6 +103,7 @@ export default function DashboardPage() {
               change="+24.3%"
               trend="up"
               icon={<TrendingUp className="h-4 w-4" />}
+              sparklineData={savingsSparkline}
             />
             <MetricCard
               title="Savings Rate"
@@ -101,6 +111,7 @@ export default function DashboardPage() {
               change="+5.2%"
               trend="up"
               icon={<TrendingUp className="h-4 w-4" />}
+              sparklineData={savingsRateSparkline}
             />
           </div>
 
