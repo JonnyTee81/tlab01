@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -41,8 +40,8 @@ export default function DashboardPage() {
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-linear-to-br from-primary via-accent to-chart-4 rounded-lg" />
-              <span className="text-xl font-bold bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
+              <div className="w-8 h-8 rounded-lg" style={{ background: 'linear-gradient(to bottom right, #14b8a6, #06b6d4, #8b5cf6)' }} />
+              <span className="text-xl font-bold bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, #14b8a6, #06b6d4)' }}>
                 Finance Flow
               </span>
             </div>
@@ -56,7 +55,6 @@ export default function DashboardPage() {
               <Bell className="h-4 w-4 text-gray-300" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-chart-5 rounded-full" />
             </Button>
-            <ThemeToggle />
             <div className="w-8 h-8 rounded-full bg-linear-to-br from-primary to-accent" />
           </div>
         </div>
